@@ -2,7 +2,7 @@
 # Round Robin Dispatcher Project Setup Script
 # Author: Project Team
 
-echo "🧱 Setting up Round Robin Dispatcher project structure..."
+echo "Setting up Round Robin Dispatcher project structure..."
 
 mkdir -p RoundRobinDispatcher/{src,include,data,docs/scripts,build,docs/ReadmeScreenshots}
 cd RoundRobinDispatcher || exit

@@ -3,5 +3,6 @@
 #include <iostream>
 int main() {
     std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::cout << "Thread sleep completed." << std::endl;
     return 0;
 }
