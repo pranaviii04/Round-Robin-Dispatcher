@@ -1,6 +1,7 @@
 #include "../include/process.h"
-#include <unistd.h>
-#include <signal.h>
+#include <unistd.h>     // fork, exec
+#include <signal.h>     // SIGINT, SIGTSTP, SIGCONT
+#include <sys/types.h>  // pid_t
 #include <iostream>
 
 void startProcess(Process* p) {
@@ -12,13 +13,11 @@ void startProcess(Process* p) {
     }
 
     if (pid == 0) {
-        // child: replace with CPU job file
         execl("./build/job", "job", NULL);
         std::cerr << "Error: exec() failed\n";
         exit(1);
     }
 
-    // parent: store OS PID
     p->osPid = pid;
     p->started = true;
 }

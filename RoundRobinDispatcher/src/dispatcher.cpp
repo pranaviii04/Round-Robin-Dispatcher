@@ -1,45 +1,72 @@
-// dispatcher.cpp - Aadarsh
-#include "../include/common.h"
-#include "../include/process.h"
-#include "../include/queue.h"
 #include "../include/iohandler.h"
 #include "../include/logger.h"
-#include <thread>
-#include <chrono>
+#include "../include/process.h"
+#include "../include/queue.h"
+
+#include <unistd.h>     // sleep, fork
+#include <signal.h>     // SIGCONT, SIGTSTP, SIGINT
+#include <sys/types.h>  // pid_t
 #include <iostream>
 
-using namespace std;
-
 int main() {
-    cout << "=== Round Robin Dispatcher Simulation Started ===" << endl;
-    int dispatcherTimer = 0, quantum = 1;
-    ProcessQueue inputQueue, rrQueue;
-    vector<Process> processes = IOHandler::readJobFile("data/dispatchlist.txt");
-    for (auto &p : processes) inputQueue.enqueue(&p);
+    ProcessList jobs = IOHandler::readJobFile("data/dispatchlist.txt");
+
+    ProcessQueue inputQ;
+    for (auto p : jobs) inputQ.enqueue(p);
+
+    ProcessQueue rrQ;
+
+    Logger logger("data/log.txt", "data/gantt.csv");
+
+    int timer = 0;
     Process* current = nullptr;
 
-    while (!inputQueue.empty() || !rrQueue.empty() || current != nullptr) {
-        IOHandler::loadArrived(inputQueue, rrQueue, dispatcherTimer);
-        if (current) {
-            current->runCycle();
+    while (!inputQ.empty() || !rrQ.empty() || current != nullptr) {
+
+        IOHandler::loadArrived(inputQ, rrQ, timer);
+
+        if (current != nullptr) {
+
+            current->remainingTime--;
+
+            logger.setTimelineEntry(timer, current->jobId);
+
             if (current->remainingTime <= 0) {
-                Logger::log("Process " + to_string(current->pid) + " completed.");
-                current = nullptr;
-            } else {
-                Logger::log("Process " + to_string(current->pid) + " suspended.");
-                rrQueue.enqueue(current);
+                logger.log(timer, current->jobId, "terminated", 0);
+                terminateProcess(current);
                 current = nullptr;
             }
-        if (!current && !rrQueue.empty()) {
-            current = rrQueue.dequeue();
-            if (!current->started) current->start();
-            else current->resume();
+            else if (!rrQ.empty()) {
+                logger.log(timer, current->jobId, "suspended", current->remainingTime);
+                suspendProcess(current);
+                rrQ.enqueue(current);
+                current = nullptr;
+            }
         }
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-        dispatcherTimer++;
-    }
+        else {
+            logger.setTimelineEntry(timer, -1);
+        }
+
+        if (current == nullptr && !rrQ.empty()) {
+            current = rrQ.dequeue();
+
+            if (!current->started) {
+                logger.log(timer, current->jobId, "started", current->remainingTime);
+                startProcess(current);
+                usleep(200000);
+            }
+            else {
+                logger.log(timer, current->jobId, "resumed", current->remainingTime);
+                resumeProcess(current);
+            }
+        }
+
+        sleep(1);
+        timer++;
     }
 
-    cout << "=== Dispatcher Finished ===" << endl;
+    logger.exportLogs();
+    IOHandler::freeProcessList(jobs);
+
     return 0;
 }
