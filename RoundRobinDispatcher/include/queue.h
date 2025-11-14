@@ -1,13 +1,29 @@
 #ifndef QUEUE_H
 #define QUEUE_H
-#include "common.h"
+
 #include "process.h"
+#include <queue>
+
 class ProcessQueue {
-    queue<Process*> q;
 public:
-    void enqueue(Process* p);
-    Process* dequeue();
-    bool empty();
-    Process* front() { return q.front(); }
+    void enqueue(Process* p) { q.push(p); }
+
+    Process* dequeue() {
+        if (q.empty()) return nullptr;
+        Process* p = q.front();
+        q.pop();
+        return p;
+    }
+
+    Process* front() const {
+        return q.empty() ? nullptr : q.front();
+    }
+
+    bool empty() const { return q.empty(); }
+    size_t size() const { return q.size(); }
+
+private:
+    std::queue<Process*> q;
 };
-#endif
+
+#endif // QUEUE_H
