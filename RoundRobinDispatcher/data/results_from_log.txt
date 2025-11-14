@@ -1,0 +1,13 @@
+JobID	Arrival	Start	Completion	BurstInput	BurstObserved	Turnaround	Waiting	Response
+1	0	0	2	2	2	2	0	0
+2	3	3	13	6	6	10	4	0
+3	7	7	8	1	1	1	0	0
+4	7	8	21	6	6	14	8	1
+5	8	10	22	6	6	14	8	2
+
+Averages:
+Average Turnaround Time: 8.20
+Average Waiting Time: 4.00
+Average Response Time: 0.60
+CPU Utilization (%): 95.45
+Throughput (jobs/sec): 0.2273
