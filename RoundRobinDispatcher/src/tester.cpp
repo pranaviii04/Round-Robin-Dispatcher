@@ -2,7 +2,7 @@
 #include "../include/tester.h"
 #include <iostream>
 void Tester::runTests() {
-    std::cout << "Running basic test cases..." << endl;
+    std::cout << "Running basic test cases..." << std::endl;
     system("make run");
-    cout << "Check data/log.txt for output validation." << endl;
+    std::cout << "Check data/log.txt for output validation." << std::endl;
 }
