@@ -1,245 +1,207 @@
-# Introduction
+# Round Robin Dispatcher – Operating Systems Project
 
-This project implements a Round Robin (RR) CPU Scheduler, following the
-principles described in William Stallings' *Operating Systems* textbook.
-The goal is to simulate process management, context switching, and
-time-sharing using actual operating system primitives such as `fork()`,
-`exec()`, `SIGTSTP`, `SIGCONT`, and `SIGINT`.
+A complete Round Robin CPU Scheduling simulator implemented using real Linux process control mechanisms (`fork()`, `exec()`, `SIGTSTP`, `SIGCONT`, `SIGINT`).  
+This project references to the Round Robin scheduler from **William Stallings' Operating Systems** textbook (Figure 9.5) using actual process management.
 
-Each job is executed as a real child process under Linux/WSL. The
-dispatcher controls execution through POSIX signals. The scheduler uses
-a time quantum of one second, matching the example described in
-Stallings Figure 9.5.
+Each job executes as a live child process under Linux/WSL2, and the dispatcher controls it using POSIX signals—simulating true context switching, CPU bursts, and quantum expiration.
 
-The system also includes a detailed logging mechanism and Gantt chart
-timeline generation for analysis.
+---
 
-# Project Overview
+## 🚀 Features
 
-The dispatcher performs the following tasks:
+- Round Robin scheduling (Quantum = **1 second**)
+- **Process creation:** `fork()` + `exec()`
+- **Context switching:**  
+  - Suspend → `SIGTSTP`  
+  - Resume → `SIGCONT`  
+  - Terminate → `SIGINT`
+- Two queues:
+  - Input queue (arrival-based)
+  - Round Robin ready queue
+- Detailed event logging (`log.txt`)
+- Automatic per-second timeline generation (`gantt.csv`)
+- Optional Gantt chart visualization (`Python`)
+- Performance metrics (turnaround, waiting, response times, CPU utilization)
 
-1.  Load all jobs from an input dispatch list file.
+---
 
-2.  Insert processes into an input queue based on arrival time.
+## 📁 Folder Structure
 
-3.  Move newly arrived processes into the Round Robin ready queue.
+RoundRobinDispatcher/
+│
+├── include/
+│ ├── common.h
+│ ├── process.h
+│ ├── queue.h
+│ ├── iohandler.h
+│ ├── logger.h
+│ ├── tester.h
+│
+├── src/
+│ ├── dispatcher.cpp
+│ ├── process.cpp
+│ ├── iohandler.cpp
+│ ├── logger.cpp
+│ ├── queue.cpp
+│ ├── job.cpp
+│ ├── tester.cpp
+│
+├── data/
+│ ├── dispatchlist.txt
+│ ├── log.txt
+│ ├── gantt.csv
+│ ├── gantt.png
+│
+├── scripts/
+│ ├── parse_log_to_gantt.py
+│ ├── gantt.py
+│ ├── analyze_log.py
+│ ├── generate_jobs.py
+│
+└── Makefile
 
-4.  If a process is currently executing:
 
-    -   Decrement its remaining CPU time.
+---
 
-    -   If the process completes, terminate it.
+## 📥 Input Format (`dispatchlist.txt`)
 
-    -   If its quantum expires, suspend it and re-enqueue it.
+Each job entry:
 
-5.  If no process is running and the RR queue is non-empty, start or
-    resume the next process.
+arrival_time, priority, total_cpu_time, ...
 
-6.  Log every event and record a per-second timeline.
-
-7.  Continue scheduling until all processes have completed.
-
-Worker programs created using `fork()` simulate CPU load through
-infinite loops. The dispatcher controls each child using signals,
-thereby simulating real OS behavior.
-
-# Features
-
--   Round Robin scheduling with a one-second time quantum.
-
--   Automatic process control:
-
-    -   Creation via `fork()`/`exec()`
-
-    -   Suspension via `SIGTSTP`
-
-    -   Resumption via `SIGCONT`
-
-    -   Termination via `SIGINT`
-
--   Two ready queues:
-
-    -   Input queue
-
-    -   Round Robin ready queue
-
--   Detailed logging system:
-
-    -   Start, suspend, resume, terminate events
-
-    -   Per-second execution timeline
-
--   Gantt chart data export in CSV format.
-
--   Works on Linux and WSL2 environments.
-
-# Folder Structure
-
-    RoundRobinDispatcher/
-    │
-    ├── include/
-    │   ├── common.h
-    │   ├── process.h
-    │   ├── queue.h
-    │   ├── iohandler.h
-    │   ├── logger.h
-    │   ├── tester.h
-    │
-    ├── src/
-    │   ├── dispatcher.cpp
-    │   ├── process.cpp
-    │   ├── iohandler.cpp
-    │   ├── logger.cpp
-    │   ├── queue.cpp
-    │   ├── job.cpp
-    │   ├── tester.cpp
-    │
-    ├── data/
-    │   ├── dispatchlist.txt
-    │   ├── log.txt
-    │   ├── gantt.csv
-    │
-    └── Makefile
-
-# Team Roles
-
--   **Aadarsh** -- Core Dispatcher Logic
-
--   **Praveen** -- Queue Management
-
--   **Pranavi** -- I/O and Logger
-
--   **Srihitha** -- Testing and Documentation
-
-# Build and Run Instructions
-
-This project requires Linux or WSL2 due to the reliance on `fork()`,
-`exec()`, and POSIX signals.
-
-To compile and run the project:
-
-``` {.bash language="bash"}
-make
-make run
-```
-
-This compiles both the dispatcher and the job program, then launches the
-Round Robin scheduler.
-
-# Input Format
-
-The dispatch list file (`dispatchlist.txt`) must contain job entries
-formatted as:
-
-    arrival_time, priority, total_cpu_time, ...
 
 Example:
 
-    0, 3, 3
-    2, 3, 6
-    4, 3, 4
-    6, 3, 5
-    8, 3, 2
+0, 3, 3
+2, 3, 6
+4, 3, 4
+6, 3, 5
+8, 3, 2
 
-Only the first three fields are used; additional fields are ignored.
 
-# Output Files
+Only the first **three** fields are used; remaining fields are ignored.
 
-After execution, the following files are generated in the `data/`
-directory:
+---
 
-## 1. log.txt {#log.txt .unnumbered}
+## 📤 Output Files
 
-A chronological record of all scheduler events:
+### **1. log.txt**  
+Chronological event log:
 
-    [   0s] Job 1 - started (remaining: 3)
-    [   1s] Job 1 - suspended (remaining: 2)
-    [   1s] Job 2 - started (remaining: 6)
-    ...
+[ 0s] Job 1 - started (remaining: 3)
+[ 1s] Job 1 - suspended (remaining: 2)
+[ 1s] Job 2 - started (remaining: 6)
 
-## 2. gantt.csv {#gantt.csv .unnumbered}
 
-A per-second timeline showing which job was running:
+### **2. gantt.csv**  
+Per-second timeline:
 
-    time,jobId
-    0,1
-    1,2
-    2,3
-    3,1
-    ...
+time,jobId
+0,1
+1,2
+2,3
+3,1
+...
 
-This can be used to produce a Gantt chart in Excel or a plotting script.
+### **3. gantt.png**  
+Graphical Gantt chart generated using Python.
 
-# Dependencies
+---
 
-Install the required Linux packages using:
+## 🛠 Build Instructions (Linux / WSL2)
 
-``` {.bash language="bash"}
+This project **requires Linux** (or WSL2) because of POSIX signals.
+
+### Install dependencies:
+```bash
 sudo apt update
-sudo apt install g++ make build-essential
-```
+sudo apt install -y g++ make build-essential python3 python3-pandas python3-matplotlib
 
-Windows users should use WSL2 (Ubuntu) for compatibility.
+### Build the project:
+make clean
+make
+### Run the dispatcher:
+./build/dispatcher
+This generates:
+1. data/log.txt
+2. possibly data/gantt.csv
 
-# Dispatcher Logic Summary
+📊 Generate Gantt Chart & Statistics
 
-The Round Robin dispatcher uses:
+### Convert log → gantt.csv:
+python3 scripts/parse_log_to_gantt.py data/log.txt data/dispatchlist.txt
 
--   `fork()` to spawn child processes.
+### Visualize Gantt chart:
+python3 scripts/gantt.py data/gantt.csv
+Produces:
+✔ data/gantt.png
 
--   `exec()` to replace the child with the job program.
+### Analyze performance metrics:
+python3 scripts/analyze_log.py data/gantt.csv data/dispatchlist.txt
+Produces:
+✔ data/results.txt
 
--   `SIGTSTP` to pause execution.
+🧪 Running Tests
 
--   `SIGCONT` to resume execution.
+Built-in tests check:
+Queue operations
+RR behavior
+Preemption logic
+Logging & timeline generation
+Termination handling
 
--   `SIGINT` to terminate execution.
-
-Each iteration reduces the remaining CPU time and determines whether to
-continue, suspend, or terminate the current job. All state changes are
-logged.
-
-# Testing
-
-The `tester.cpp` module provides basic automated tests using:
-
-``` {.bash language="bash"}
+Run tests with:
 make run
-```
 
-Tests verify:
+🧠 How the Scheduler Works
+1. On job arrival:
+Job moves from input queue → RR queue
+2. Every 1 second:
+If running job still has CPU time → decrement
+If quantum expires → SIGTSTP (suspend) and re-queue
+If CPU time becomes 0 → SIGINT (terminate)
+3. If no process running:
+Dequeue next job
+If first run → fork() + exec()
+Else → SIGCONT (resume)
+4. Log the event
+5. Record timeline tick
 
--   Queue transitions
+Team Members
+Aadarsh (Core Dispatcher Logic)
+Praveen (Queue Management)
+Pranavi (I/O Handling & Logging)
+Srihitha (Testing & Documentation)
 
--   Process start/suspend/resume events
+## 📘 Beginner-Friendly Quick Start
+1. Install dependencies
+   ./setup_project.sh
+    sudo apt install g++ make python3 python3-pandas python3-matplotlib
 
--   Logging correctness
+2. Build project
+   make
 
--   Termination behavior
+3. Run scheduler
+   ./build/dispatcher
 
--   Timeline generation accuracy
+4. Parse log into timeline
+   python3 scripts/parse_log_to_gantt.py data/log.txt data/dispatchlist.txt
 
-# Conclusion
+5. Generate Gantt chart
+   python3 scripts/gantt.py data/gantt.csv
 
-This project demonstrates a functional implementation of Round Robin
-scheduling using real Unix process control. It highlights key OS
-concepts including process creation, context switching via signals, CPU
-time management, queue design, logging, and execution timeline analysis.
+6. Analyze metrics
+   python3 scripts/analyze_log.py data/gantt.csv data/dispatchlist.txt
 
-The modular design allows future improvements such as priority
-scheduling, multi-level feedback queues, and extended performance
-metrics.
+7. View results in /data:
+   log.txt
+   gantt.csv
+   gantt.png
+   results.txt
+   results_from_log.txt
 
-# Signatures
-
-**Aadarsh Senapati**\
-Core Dispatcher Logic
-
-**Praveen**\
-Queue Management
-
-**Pranavi**\
-I/O Handling and Logging
-
-**Srihitha**\
-Testing and Documentation
+## Signatures
+- Aadarsh
+- Praveen
+- Pranavi
+- Srihitha
