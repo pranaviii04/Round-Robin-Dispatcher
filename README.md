@@ -150,7 +150,7 @@ python3 scripts/analyze_log.py data/gantt.csv data/dispatchlist.txt
 Produces:
 ✔ data/results.txt
 
-## 🧪 Running Tests
+## Running Tests
 Built-in tests check:
 - Queue operations
 - RR behavior
