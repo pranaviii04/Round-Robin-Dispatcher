@@ -7,7 +7,7 @@ Each job executes as a live child process under Linux/WSL2, and the dispatcher c
 
 ---
 
-## 🚀 Features
+## Features
 
 - Round Robin scheduling (Quantum = **1 second**)
 - **Process creation:** `fork()` + `exec()`
@@ -25,7 +25,7 @@ Each job executes as a live child process under Linux/WSL2, and the dispatcher c
 
 ---
 
-## 📁 Folder Structure
+## 📂 Folder Structure
 ```
 RoundRobinDispatcher/
 │
@@ -63,7 +63,7 @@ RoundRobinDispatcher/
 ```
 ---
 
-## 📥 Input Format (`dispatchlist.txt`)
+## Input Format (`dispatchlist.txt`)
 
 Each job entry:
 
@@ -83,7 +83,7 @@ Only the first **three** fields are used; remaining fields are ignored.
 
 ---
 
-## 📤 Output Files
+## Output Files
 
 ### **1. log.txt**  
 Chronological event log:
@@ -162,7 +162,7 @@ Run tests with:
 ```bash
 make run
 ```
-## 🧠 How the Scheduler Works
+## How the Scheduler Works
 1. **Job Arrival**  
 &nbsp;&nbsp;&nbsp;&nbsp;Jobs move from Input Queue → RR Queue based on arrival time.
 
@@ -187,7 +187,7 @@ make run
 - Pranavi (I/O Handling & Logging)
 - Srihitha (Testing & Documentation)
 
-## 📘 Beginner-Friendly Quick Start
+## Beginner-Friendly Quick Start
 1. Install dependencies
    ```
    ./setup_project.sh
@@ -220,5 +220,5 @@ make run
    - results.txt
    - results_from_log.txt
 
-## ✍️Signatures
+## Signatures
 Aadarsh  Praveen  Pranavi  Srihitha
