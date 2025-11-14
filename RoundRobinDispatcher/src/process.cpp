@@ -1,29 +1,40 @@
-// process.cpp - Aadarsh
 #include "../include/process.h"
-#include "../include/logger.h"
+#include <unistd.h>
+#include <signal.h>
+#include <iostream>
 
-Process::Process(int id, int arrival, int cpu) {
-    pid = id; 
-    arrivalTime = arrival; 
-    remainingTime = cpu;
-    started = false; 
-    finished = false;
-}
-void Process::start() { 
-    started = true; 
-    Logger::log("Process " + to_string(pid) + " started."); 
-}
-void Process::resume() { 
-    Logger::log("Process " + to_string(pid) + " resumed.");
-}
-void Process::runCycle() { 
-    if (remainingTime > 0) {
-        remainingTime--; 
-        Logger::log("Process " + to_string(pid) + " ran for 1 time unit. Remaining time: " + to_string(remainingTime) + ".");
-        if (remainingTime == 0 && !finished) {
-        finished = true;
-        Logger::log("Process " + to_string(pid) + " finished execution.");
-    }
+void startProcess(Process* p) {
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        std::cerr << "Error: fork() failed for job " << p->jobId << "\n";
+        return;
     }
 
+    if (pid == 0) {
+        // child: replace with CPU job file
+        execl("./build/job", "job", NULL);
+        std::cerr << "Error: exec() failed\n";
+        exit(1);
+    }
+
+    // parent: store OS PID
+    p->osPid = pid;
+    p->started = true;
+}
+
+void suspendProcess(Process* p) {
+    if (p->osPid > 0)
+        kill(p->osPid, SIGTSTP);
+}
+
+void resumeProcess(Process* p) {
+    if (p->osPid > 0)
+        kill(p->osPid, SIGCONT);
+}
+
+void terminateProcess(Process* p) {
+    if (p->osPid > 0)
+        kill(p->osPid, SIGINT);
+    p->finished = true;
 }

@@ -24,4 +24,9 @@ struct Process {
 
 using ProcessList = std::vector<Process*>;
 
+void startProcess(Process* p);     // fork + exec
+void suspendProcess(Process* p);   // SIGTSTP
+void resumeProcess(Process* p);    // SIGCONT
+void terminateProcess(Process* p); // SIGINT
+
 #endif // PROCESS_H
